@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GharKhata – Smart Expense Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700&family=Hind:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --saffron:#FF6B2C;--saffron-light:#FFF0E9;--saffron-mid:#FFD4BE;
+  --green:#1A7A4A;--green-light:#E8F5EE;--green-mid:#A8D9BC;
+  --amber:#F5A623;--amber-light:#FFF8E8;
+  --red:#D63031;--red-light:#FFEBEB;
+  --purple:#6C5CE7;--purple-light:#F0EEFF;
+  --blue:#2E86AB;--blue-light:#E8F4F8;
+  --text:#1A1A2E;--text2:#5A5A72;--text3:#9A9AB0;
+  --bg:#F8F6F2;--card:#FFFFFF;--border:#E8E4DC;
+  --font-head:'Baloo 2',sans-serif;--font-body:'Hind',sans-serif;
+}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px;max-width:480px;margin:0 auto}
+
+/* TOP BAR */
+.topbar{background:var(--saffron);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:var(--font-head);font-size:20px;font-weight:700;color:#fff}
+.topbar-sub{font-size:12px;color:rgba(255,255,255,.8);margin-top:2px}
+.topbar-avatar{width:40px;height:40px;background:rgba(255,255,255,.25);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:700;color:#fff;font-size:16px;cursor:pointer}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer;gap:4px;border:none;background:none;font-family:var(--font-body);font-size:10px;color:var(--text3);transition:.2s}
+.nav-item.active{color:var(--saffron)}
+.nav-icon{font-size:20px;line-height:1}
+
+/* PAGES */
+.page{display:none;padding:16px}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;border:1px solid var(--border)}
+.card-title{font-family:var(--font-head);font-size:15px;font-weight:600;color:var(--text);margin-bottom:12px}
+
+/* BUDGET RING */
+.budget-wrap{display:flex;align-items:center;gap:20px;margin-bottom:8px}
+.ring-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.ring-pct{font-family:var(--font-head);font-size:22px;font-weight:700}
+.ring-pct.safe{color:var(--green)}
+.ring-pct.warn{color:var(--amber)}
+.ring-pct.over{color:var(--red)}
+.ring-label{font-size:10px;color:var(--text3)}
+.budget-info{flex:1}
+.budget-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+.budget-row b{font-weight:500}
+.status-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:500;margin-top:8px}
+.status-pill.safe{background:var(--green-light);color:var(--green)}
+.status-pill.warn{background:var(--amber-light);color:#B07A00}
+.status-pill.over{background:var(--red-light);color:var(--red)}
+
+/* CATEGORY BARS */
+.cat-item{margin-bottom:10px}
+.cat-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.cat-name{font-weight:500}
+.cat-amt{color:var(--text2)}
+.bar-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:.6s}
+
+/* SUGGESTION CARD */
+.suggest{background:var(--saffron-light);border:1px solid var(--saffron-mid);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.suggest-icon{font-size:20px;flex-shrink:0}
+.suggest-text{font-size:13px;color:var(--text);line-height:1.5}
+.suggest-text b{color:var(--saffron);font-weight:600}
+
+/* ADD EXPENSE */
+.modal-title{font-family:var(--font-head);font-size:18px;font-weight:700;margin-bottom:20px;text-align:center}
+.amount-input-wrap{background:var(--saffron-light);border-radius:16px;padding:16px;text-align:center;margin-bottom:20px}
+.rupee{font-size:28px;color:var(--saffron);font-family:var(--font-head);font-weight:700}
+.amount-disp{font-size:48px;font-family:var(--font-head);font-weight:700;color:var(--text)}
+.cats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.cat-btn{border:1.5px solid var(--border);background:#fff;border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-family:var(--font-body);color:var(--text2);transition:.15s}
+.cat-btn.sel{border-color:var(--saffron);background:var(--saffron-light);color:var(--saffron)}
+.cat-btn span:first-child{font-size:22px}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.num-btn{border:1px solid var(--border);background:#fff;border-radius:12px;padding:14px;font-size:20px;font-family:var(--font-head);font-weight:500;color:var(--text);cursor:pointer;transition:.1s;text-align:center}
+.num-btn:active{background:var(--bg)}
+.num-btn.zero{grid-column:1/3}
+.num-btn.del{color:var(--red)}
+.add-btn{width:100%;padding:16px;background:var(--saffron);color:#fff;border:none;border-radius:16px;font-family:var(--font-head);font-size:17px;font-weight:600;cursor:pointer;letter-spacing:.3px;transition:.15s}
+.add-btn:active{transform:scale(.98)}
+
+/* TRANSACTIONS */
+.tx-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.tx-item:last-child{border-bottom:none}
+.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.tx-info{flex:1}
+.tx-name{font-size:14px;font-weight:500}
+.tx-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.tx-amt{font-family:var(--font-head);font-size:16px;font-weight:600;color:var(--red)}
+
+/* SEASONAL PRICES */
+.season-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.season-item{background:var(--bg);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.season-emoji{font-size:28px}
+.season-name{font-size:13px;font-weight:500}
+.season-price{font-family:var(--font-head);font-size:16px;font-weight:700}
+.price-up{color:var(--red)}
+.price-down{color:var(--green)}
+.price-tag{font-size:11px;padding:2px 8px;border-radius:8px;font-weight:500;display:inline-block;margin-top:2px}
+.price-tag.up{background:var(--red-light);color:var(--red)}
+.price-tag.down{background:var(--green-light);color:var(--green)}
+.price-tag.ok{background:var(--blue-light);color:var(--blue)}
+
+/* WISHLIST */
+.wish-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.wish-item:last-child{border-bottom:none}
+.wish-icon{font-size:24px}
+.wish-info{flex:1}
+.wish-name{font-size:14px;font-weight:500}
+.wish-price{font-size:12px;color:var(--text3);margin-top:2px}
+.wish-badge{font-size:11px;padding:3px 10px;border-radius:10px;font-weight:500}
+.wish-badge.can{background:var(--green-light);color:var(--green)}
+.wish-badge.save{background:var(--amber-light);color:#A07000}
+
+/* CHARTS */
+.period-tabs{display:flex;gap:8px;margin-bottom:16px}
+.ptab{flex:1;padding:8px;border:1.5px solid var(--border);border-radius:10px;background:#fff;font-family:var(--font-body);font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:.15s;text-align:center}
+.ptab.active{border-color:var(--saffron);background:var(--saffron-light);color:var(--saffron)}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:140px;padding:0 4px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bar-bar{width:100%;border-radius:6px 6px 0 0;transition:.4s;min-height:4px}
+
+/* SUMMARY ROW */
+.summ-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.summ-card{background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border)}
+.summ-val{font-family:var(--font-head);font-size:22px;font-weight:700}
+.summ-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+.summ-card.green .summ-val{color:var(--green)}
+.summ-card.red .summ-val{color:var(--red)}
+
+/* VOICE / PHOTO BUTTONS */
+.voice-row{display:flex;gap:10px;margin-bottom:14px}
+.voice-btn{flex:1;background:var(--purple-light);border:1.5px solid var(--purple);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--font-body);transition:.15s}
+.voice-btn:active{transform:scale(.97)}
+.voice-icon{font-size:22px}
+.voice-text{font-size:13px;color:var(--purple);font-weight:500}
+.photo-btn{flex:1;background:var(--blue-light);border:1.5px solid var(--blue);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--font-body);transition:.15s}
+.photo-btn:active{transform:scale(.97)}
+.photo-text{font-size:13px;color:var(--blue);font-weight:500}
+
+/* SECTION HEADER */
+.sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sec-title{font-family:var(--font-head);font-size:16px;font-weight:600}
+.sec-link{font-size:12px;color:var(--saffron);font-weight:500;cursor:pointer}
+
+/* GREETING */
+.greet-block{background:var(--saffron);margin:-16px -16px 16px;padding:16px 16px 0}
+.greet-name{font-family:var(--font-head);font-size:22px;font-weight:700;color:#fff}
+.greet-sub{font-size:13px;color:rgba(255,255,255,.8);margin-top:2px}
+.month-badge{display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 14px;font-size:12px;color:#fff;margin-top:6px;margin-bottom:16px}
+
+/* TOAST */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1A1A2E;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:300;display:none;white-space:nowrap;pointer-events:none}
+.toast.show{display:block}
+
+/* PROFILE PAGE */
+.profile-header{text-align:center;padding:24px 0 16px}
+.profile-avatar{width:72px;height:72px;background:var(--saffron);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:700;color:#fff;font-size:28px;margin:0 auto 12px}
+.profile-name{font-family:var(--font-head);font-size:20px;font-weight:700}
+.profile-sub{font-size:13px;color:var(--text3);margin-top:4px}
+.setting-item{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.setting-item:last-child{border-bottom:none}
+.setting-left{display:flex;align-items:center;gap:12px;font-size:14px}
+.setting-icon{font-size:20px;width:32px;text-align:center}
+.setting-arrow{color:var(--text3);font-size:16px}
+
+/* TOGGLE SWITCH */
+.toggle{position:relative;width:44px;height:24px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:12px;transition:.3s;cursor:pointer}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle input:checked + .toggle-slider{background:var(--saffron)}
+.toggle input:checked + .toggle-slider:before{transform:translateX(20px)}
+
+/* BUDGET EDIT */
+.budget-edit-wrap{display:flex;align-items:center;gap:8px;margin-top:12px}
+.budget-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-family:var(--font-head);font-size:18px;font-weight:600;color:var(--text);background:#fff;outline:none}
+.budget-input:focus{border-color:var(--saffron)}
+.budget-save-btn{padding:10px 18px;background:var(--saffron);color:#fff;border:none;border-radius:12px;font-family:var(--font-head);font-size:14px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">🏠 GharKhata</div>
+    <div class="topbar-sub">Smart Home Expense Manager</div>
+  </div>
+  <div class="topbar-avatar" onclick="goTab('profile')">P</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════ PAGE: HOME ═══════════════ -->
+<div class="page active" id="page-home">
+  <div class="greet-block">
+    <div class="greet-name">Namaste, Priya! 🙏</div>
+    <div class="greet-sub">Here's your March 2025 summary</div>
+    <div class="month-badge">📅 March 2025</div>
+  </div>
+
+  <div class="summ-row">
+    <div class="summ-card red">
+      <div class="summ-val" id="home-spent">₹12,450</div>
+      <div class="summ-lbl">Spent this month</div>
+    </div>
+    <div class="summ-card green">
+      <div class="summ-val" id="home-left">₹7,550</div>
+      <div class="summ-lbl">Remaining budget</div>
+    </div>
+  </div>
+
+  <!-- Budget Ring -->
+  <div class="card">
+    <div class="card-title">Monthly Budget</div>
+    <div class="budget-wrap">
+      <div class="ring-wrap">
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="#E8E4DC" stroke-width="10"/>
+          <circle id="ring-progress" cx="50" cy="50" r="40" fill="none" stroke="var(--amber)" stroke-width="10"
+            stroke-dasharray="251.2" stroke-dashoffset="95.5" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct warn" id="ring-pct">62%</div>
+          <div class="ring-label">used</div>
+        </div>
+      </div>
+      <div class="budget-info">
+        <div class="budget-row"><span>Total Budget</span><b id="info-budget">₹20,000</b></div>
+        <div class="budget-row"><span>Spent</span><b id="info-spent">₹12,450</b></div>
+        <div class="budget-row"><span>Left</span><b style="color:var(--green)" id="info-left">₹7,550</b></div>
+        <div class="status-pill warn" id="status-pill">⚠️ 62% used — 13 days left</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Suggestion -->
+  <div class="suggest">
+    <div class="suggest-icon">💡</div>
+    <div class="suggest-text">You've spent <b>₹3,200 on vegetables</b> this month — 28% above average. Tomatoes are expensive right now. Try <b>ridge gourd or bottlegourd</b> as cheaper alternatives!</div>
+  </div>
+
+  <!-- Voice / Photo Quick Add -->
+  <div class="voice-row">
+    <button class="voice-btn" onclick="showToast('🎙️ Listening... say your expense!')">
+      <span class="voice-icon">🎙️</span>
+      <span class="voice-text">Voice Entry</span>
+    </button>
+    <button class="photo-btn" onclick="showToast('📷 Opening camera to scan bill...')">
+      <span style="font-size:22px">📷</span>
+      <span class="photo-text">Scan Bill</span>
+    </button>
+  </div>
+
+  <!-- Category Breakdown -->
+  <div class="card">
+    <div class="sec-head">
+      <div class="card-title" style="margin:0">Category Breakdown</div>
+    </div>
+    <div id="cat-list"></div>
+  </div>
+
+  <!-- Recent Transactions -->
+  <div class="card">
+    <div class="sec-head">
+      <div class="card-title" style="margin:0">Recent Expenses</div>
+      <div class="sec-link" onclick="goTab('tx')">See all →</div>
+    </div>
+    <div id="recent-tx"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: ADD EXPENSE ═══════════════ -->
+<div class="page" id="page-add">
+  <div class="card">
+    <div class="modal-title">Add Expense</div>
+    <div class="amount-input-wrap">
+      <div><span class="rupee">₹</span><span class="amount-disp" id="add-amount">0</span></div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px" id="add-cat-label">Select category below</div>
+    </div>
+    <div class="cats-grid" id="cats-grid"></div>
+    <div class="numpad">
+      <button class="num-btn" onclick="numTap('1')">1</button>
+      <button class="num-btn" onclick="numTap('2')">2</button>
+      <button class="num-btn" onclick="numTap('3')">3</button>
+      <button class="num-btn" onclick="numTap('4')">4</button>
+      <button class="num-btn" onclick="numTap('5')">5</button>
+      <button class="num-btn" onclick="numTap('6')">6</button>
+      <button class="num-btn" onclick="numTap('7')">7</button>
+      <button class="num-btn" onclick="numTap('8')">8</button>
+      <button class="num-btn" onclick="numTap('9')">9</button>
+      <button class="num-btn zero" onclick="numTap('0')">0</button>
+      <button class="num-btn del" onclick="numDel()">⌫</button>
+    </div>
+    <button class="add-btn" onclick="addExpense()">✓ Add Expense</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: TRANSACTIONS ═══════════════ -->
+<div class="page" id="page-tx">
+  <div class="sec-title" style="margin-bottom:12px">All Transactions</div>
+  <div class="card" id="all-tx"></div>
+</div>
+
+<!-- ═══════════════ PAGE: SEASONAL PRICES ═══════════════ -->
+<div class="page" id="page-seasonal">
+  <div class="card">
+    <div class="card-title">🌿 Seasonal Price Tracker</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px">March 2025 — Market prices near you</div>
+    <div class="season-grid" id="season-grid"></div>
+  </div>
+
+  <div class="suggest" style="background:var(--green-light);border-color:var(--green-mid)">
+    <div class="suggest-icon">🥬</div>
+    <div class="suggest-text">This is a <b style="color:var(--green)">great time to buy leafy greens</b> — spinach and methi are at season lows. Stock up on fenugreek for the next 2 weeks!</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🛒 Smart Shopping Tip</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.6">
+      Tomatoes are <span style="color:var(--red);font-weight:600">40% more expensive</span> than last month. Replace with <b>raw mango</b> in gravies or use <b>tamarind</b> for sourness. Save up to <b style="color:var(--green)">₹200 this week</b>.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: WISHLIST ═══════════════ -->
+<div class="page" id="page-wish">
+  <div class="card">
+    <div class="card-title">🛒 Wishlist & Savings Goals</div>
+    <div id="wish-list"></div>
+  </div>
+
+  <div class="card" style="background:var(--green-light);border-color:var(--green-mid)">
+    <div class="card-title" style="color:var(--green)">💰 Savings Tip</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.6">
+      Save <b style="color:var(--green)">₹500/month</b> on vegetables by buying seasonal items. At this rate, your <b>Mixer Grinder</b> goal will be reached in <b>3 months</b>!
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 Monthly Spending Chart</div>
+    <div class="period-tabs">
+      <button class="ptab active" onclick="setPeriod('week',this)">This Week</button>
+      <button class="ptab" onclick="setPeriod('month',this)">This Month</button>
+    </div>
+    <div class="bar-chart" id="chart-bars"></div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px" id="chart-labels"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE: PROFILE / SETTINGS ═══════════════ -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <div class="profile-avatar">P</div>
+    <div class="profile-name">Priya Sharma</div>
+    <div class="profile-sub">priya.sharma@gmail.com</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">💰 Monthly Budget</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Current: <b id="curr-budget-disp">₹20,000</b></div>
+    <div class="budget-edit-wrap">
+      <input type="number" class="budget-input" id="budget-input" placeholder="20000" value="20000">
+      <button class="budget-save-btn" onclick="saveBudget()">Save</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚙️ Settings</div>
+    <div class="setting-item">
+      <div class="setting-left">
+        <span class="setting-icon">🔔</span>
+        <span>Budget Alerts</span>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" checked onchange="showToast(this.checked?'🔔 Alerts enabled':'🔕 Alerts disabled')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-item">
+      <div class="setting-left">
+        <span class="setting-icon">📅</span>
+        <span>Daily Reminders</span>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" onchange="showToast(this.checked?'📅 Reminders on':'📅 Reminders off')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-item">
+      <div class="setting-left">
+        <span class="setting-icon">👨‍👩‍👧</span>
+        <span>Family Sharing</span>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" onchange="showToast(this.checked?'👨‍👩‍👧 Family sharing on':'Family sharing off')">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-item" onclick="showToast('📤 Exporting data as CSV...')">
+      <div class="setting-left">
+        <span class="setting-icon">📤</span>
+        <span>Export Data</span>
+      </div>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-item" onclick="showToast('🗑️ All data cleared!')">
+      <div class="setting-left">
+        <span class="setting-icon" style="color:var(--red)">🗑️</span>
+        <span style="color:var(--red)">Clear All Data</span>
+      </div>
+      <span class="setting-arrow">›</span>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:12px;color:var(--text3);padding:12px 0">
+    GharKhata v1.0 · Made with ❤️ for Indian Homemakers
+  </div>
+</div>
+
+<!-- NAV BAR -->
+<nav class="nav">
+  <button class="nav-item active" onclick="goTab('home')" id="nav-home">
+    <span class="nav-icon">🏠</span>Home
+  </button>
+  <button class="nav-item" onclick="goTab('add')" id="nav-add">
+    <span class="nav-icon">➕</span>Add
+  </button>
+  <button class="nav-item" onclick="goTab('seasonal')" id="nav-seasonal">
+    <span class="nav-icon">🌿</span>Prices
+  </button>
+  <button class="nav-item" onclick="goTab('wish')" id="nav-wish">
+    <span class="nav-icon">⭐</span>Wishlist
+  </button>
+  <button class="nav-item" onclick="goTab('tx')" id="nav-tx">
+    <span class="nav-icon">📋</span>History
+  </button>
+</nav>
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+const CATS = [
+  {id:'veg',   emoji:'🥦', name:'Vegetables', color:'#1A7A4A', light:'#E8F5EE'},
+  {id:'grocery',emoji:'🛒',name:'Groceries',  color:'#F5A623', light:'#FFF8E8'},
+  {id:'electric',emoji:'⚡',name:'Electricity',color:'#2E86AB', light:'#E8F4F8'},
+  {id:'milk',  emoji:'🥛', name:'Milk & Dairy',color:'#6C5CE7',light:'#F0EEFF'},
+  {id:'snacks',emoji:'🍿', name:'Snacks',     color:'#FF6B2C', light:'#FFF0E9'},
+  {id:'medicine',emoji:'💊',name:'Medicine',  color:'#D63031', light:'#FFEBEB'},
+  {id:'clothing',emoji:'👗',name:'Clothing',  color:'#E84393', light:'#FFEEF8'},
+  {id:'other', emoji:'📦', name:'Other',      color:'#5A5A72', light:'#F4F4F8'},
+];
+
+let state = {
+  budget: 20000,
+  transactions: [
+    {id:1, cat:'veg',      name:'Vegetables',       amount:320,  date:'Today, 10:30 AM'},
+    {id:2, cat:'grocery',  name:'Grocery Store',     amount:1200, date:'Today, 9:00 AM'},
+    {id:3, cat:'electric', name:'Electricity Bill',  amount:850,  date:'Yesterday'},
+    {id:4, cat:'milk',     name:'Milk (5L)',          amount:230,  date:'Yesterday'},
+    {id:5, cat:'snacks',   name:'Biscuits & Chips',  amount:180,  date:'Mar 18'},
+    {id:6, cat:'veg',      name:'Tomatoes & Onions', amount:420,  date:'Mar 17'},
+    {id:7, cat:'grocery',  name:'Atta & Rice',       amount:750,  date:'Mar 16'},
+    {id:8, cat:'medicine', name:'Pharmacy',           amount:340,  date:'Mar 15'},
+    {id:9, cat:'veg',      name:'Leafy Greens',       amount:160,  date:'Mar 14'},
+    {id:10,cat:'grocery',  name:'Pulses & Spices',   amount:640,  date:'Mar 13'},
+    {id:11,cat:'snacks',   name:'Tea & Coffee',       amount:340,  date:'Mar 12'},
+    {id:12,cat:'clothing', name:'Kids School Uniform',amount:1200,date:'Mar 10'},
+    {id:13,cat:'milk',     name:'Curd & Butter',      amount:460,  date:'Mar 9'},
+    {id:14,cat:'other',    name:'Newspaper',          amount:150,  date:'Mar 8'},
+    {id:15,cat:'medicine', name:'Vitamins',            amount:560,  date:'Mar 6'},
+  ],
+};
+
+const SEASONAL = [
+  {emoji:'🍅', name:'Tomatoes',   price:'₹68/kg',      trend:'up',   label:'40% up'},
+  {emoji:'🥬', name:'Spinach',    price:'₹22/bunch',   trend:'down', label:'Best time'},
+  {emoji:'🥕', name:'Carrots',    price:'₹35/kg',      trend:'ok',   label:'Normal'},
+  {emoji:'🧅', name:'Onions',     price:'₹32/kg',      trend:'down', label:'Season low'},
+  {emoji:'🍋', name:'Lemons',     price:'₹120/dozen',  trend:'up',   label:'25% up'},
+  {emoji:'🥒', name:'Cucumber',   price:'₹28/kg',      trend:'down', label:'Good deal'},
+  {emoji:'🌶️', name:'Chillies',  price:'₹45/100g',    trend:'ok',   label:'Normal'},
+  {emoji:'🫛', name:'Beans',      price:'₹55/kg',      trend:'down', label:'Season low'},
+];
+
+const WISHLIST = [
+  {emoji:'🪄', name:'Mixer Grinder',  price:3200,  saved:1800, status:'save'},
+  {emoji:'👘', name:'Silk Saree',      price:2500,  saved:2500, status:'can'},
+  {emoji:'🧴', name:'Skincare Set',    price:800,   saved:1200, status:'can'},
+  {emoji:'📱', name:'New Phone',       price:15000, saved:3000, status:'save'},
+];
+
+// ── STATE HELPERS ──────────────────────────────────────
+function getTotalSpent() {
+  return state.transactions.reduce((s,t)=>s+t.amount, 0);
+}
+
+function getCatSpend() {
+  const map = {};
+  state.transactions.forEach(t => { map[t.cat] = (map[t.cat]||0) + t.amount; });
+  return map;
+}
+
+// ── NAVIGATION ─────────────────────────────────────────
+const TAB_MAP = {home:'home',add:'add',seasonal:'seasonal',wish:'wish',tx:'tx',profile:'profile'};
+const NAV_TABS = ['home','add','seasonal','wish','tx'];
+
+function goTab(tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  const navEl = document.getElementById('nav-'+tab);
+  if (navEl) navEl.classList.add('active');
+  if (tab==='home')     renderHome();
+  if (tab==='tx')       renderAllTx();
+  if (tab==='wish')     { renderWish(); renderChart('week'); }
+  if (tab==='add')      renderAddPage();
+  if (tab==='seasonal') renderSeasonal();
+}
+
+// ── HOME ───────────────────────────────────────────────
+function renderHome() {
+  const spent = getTotalSpent();
+  const left  = Math.max(0, state.budget - spent);
+  const pct   = Math.min(100, Math.round(spent / state.budget * 100));
+
+  document.getElementById('home-spent').textContent = '₹'+spent.toLocaleString();
+  document.getElementById('home-left').textContent  = '₹'+left.toLocaleString();
+  document.getElementById('info-budget').textContent = '₹'+state.budget.toLocaleString();
+  document.getElementById('info-spent').textContent  = '₹'+spent.toLocaleString();
+  document.getElementById('info-left').textContent   = '₹'+left.toLocaleString();
+
+  // Ring
+  const circumference = 251.2;
+  const offset = circumference - (pct / 100) * circumference;
+  const ringEl = document.getElementById('ring-progress');
+  const pctEl  = document.getElementById('ring-pct');
+  const pillEl = document.getElementById('status-pill');
+  ringEl.style.strokeDashoffset = offset;
+  pctEl.textContent = pct+'%';
+  if (pct >= 90) {
+    ringEl.style.stroke = 'var(--red)';
+    pctEl.className = 'ring-pct over';
+    pillEl.className = 'status-pill over';
+    pillEl.textContent = '🚨 '+pct+'% used — budget nearly gone!';
+  } else if (pct >= 60) {
+    ringEl.style.stroke = 'var(--amber)';
+    pctEl.className = 'ring-pct warn';
+    pillEl.className = 'status-pill warn';
+    pillEl.textContent = '⚠️ '+pct+'% used — spend carefully';
+  } else {
+    ringEl.style.stroke = 'var(--green)';
+    pctEl.className = 'ring-pct safe';
+    pillEl.className = 'status-pill safe';
+    pillEl.textContent = '✅ '+pct+'% used — on track!';
+  }
+
+  // Category bars
+  const catSpend = getCatSpend();
+  const maxSpend = Math.max(...Object.values(catSpend));
+  const topCats = CATS.map(c=>({...c, spent:catSpend[c.id]||0}))
+    .filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent).slice(0,5);
+
+  document.getElementById('cat-list').innerHTML = topCats.map(c=>`
+    <div class="cat-item">
+      <div class="cat-top">
+        <span class="cat-name">${c.emoji} ${c.name}</span>
+        <span class="cat-amt">₹${c.spent.toLocaleString()}</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${Math.round(c.spent/maxSpend*100)}%;background:${c.color}"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Recent transactions
+  document.getElementById('recent-tx').innerHTML = state.transactions.slice(0,4).map(t=>{
+    const cat = CATS.find(c=>c.id===t.cat)||CATS[7];
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${cat.light}">${cat.emoji}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.name}</div>
+        <div class="tx-meta">${t.date}</div>
+      </div>
+      <div class="tx-amt">-₹${t.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ALL TRANSACTIONS ───────────────────────────────────
+function renderAllTx() {
+  document.getElementById('all-tx').innerHTML = state.transactions.map(t=>{
+    const cat = CATS.find(c=>c.id===t.cat)||CATS[7];
+    return `<div class="tx-item">
+      <div class="tx-icon" style="background:${cat.light}">${cat.emoji}</div>
+      <div class="tx-info">
+        <div class="tx-name">${t.name}</div>
+        <div class="tx-meta">${t.date} · ${cat.name}</div>
+      </div>
+      <div class="tx-amt">-₹${t.amount.toLocaleString()}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── ADD EXPENSE ────────────────────────────────────────
+let addAmtStr = '0';
+let selectedCat = null;
+
+function renderAddPage() {
+  addAmtStr = '0'; selectedCat = null;
+  document.getElementById('add-amount').textContent = '0';
+  document.getElementById('add-cat-label').textContent = 'Select category below';
+  document.getElementById('cats-grid').innerHTML = CATS.map(c=>`
+    <button class="cat-btn" id="catbtn-${c.id}" onclick="selCat('${c.id}')">
+      <span>${c.emoji}</span>${c.name}
+    </button>
+  `).join('');
+}
+
+function selCat(id) {
+  selectedCat = id;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('catbtn-'+id).classList.add('sel');
+  const cat = CATS.find(c=>c.id===id);
+  document.getElementById('add-cat-label').textContent = cat.emoji+' '+cat.name+' selected';
+}
+
+function numTap(d) {
+  if (addAmtStr==='0') addAmtStr=d; else addAmtStr+=d;
+  if (addAmtStr.length>7) addAmtStr=addAmtStr.slice(0,7);
+  document.getElementById('add-amount').textContent = parseInt(addAmtStr).toLocaleString();
+}
+
+function numDel() {
+  addAmtStr = addAmtStr.slice(0,-1)||'0';
+  document.getElementById('add-amount').textContent = parseInt(addAmtStr).toLocaleString();
+}
+
+function addExpense() {
+  const amt = parseInt(addAmtStr);
+  if (amt<=0)       { showToast('⚠️ Please enter an amount!'); return; }
+  if (!selectedCat) { showToast('⚠️ Please select a category!'); return; }
+  const cat = CATS.find(c=>c.id===selectedCat);
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  state.transactions.unshift({
+    id: Date.now(), cat: selectedCat,
+    name: cat.name, amount: amt,
+    date: 'Today, '+timeStr
+  });
+  showToast('✅ ₹'+amt.toLocaleString()+' added to '+cat.name+'!');
+  addAmtStr='0'; selectedCat=null;
+  setTimeout(()=>goTab('home'), 800);
+}
+
+// ── SEASONAL ───────────────────────────────────────────
+function renderSeasonal() {
+  document.getElementById('season-grid').innerHTML = SEASONAL.map(s=>`
+    <div class="season-item">
+      <div class="season-emoji">${s.emoji}</div>
+      <div class="season-name">${s.name}</div>
+      <div class="season-price ${s.trend==='up'?'price-up':s.trend==='down'?'price-down':''}">${s.price}</div>
+      <span class="price-tag ${s.trend}">${s.trend==='up'?'↑ ':s.trend==='down'?'↓ ':''}${s.label}</span>
+    </div>
+  `).join('');
+}
+
+// ── WISHLIST ───────────────────────────────────────────
+function renderWish() {
+  document.getElementById('wish-list').innerHTML = WISHLIST.map(w=>`
+    <div class="wish-item">
+      <div class="wish-icon">${w.emoji}</div>
+      <div class="wish-info">
+        <div class="wish-name">${w.name}</div>
+        <div class="wish-price">Target ₹${w.price.toLocaleString()} · Saved ₹${w.saved.toLocaleString()}</div>
+        <div style="margin-top:5px;height:4px;background:var(--border);border-radius:2px">
+          <div style="height:100%;border-radius:2px;background:var(--green);width:${Math.min(100,Math.round(w.saved/w.price*100))}%"></div>
+        </div>
+      </div>
+      <span class="wish-badge ${w.status}">${w.status==='can'?'✓ Buy Now':'Save more'}</span>
+    </div>
+  `).join('');
+}
+
+// ── CHART ──────────────────────────────────────────────
+function renderChart(period) {
+  const labels = period==='week'
+    ? ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    : ['Week 1','Week 2','Week 3','Week 4'];
+  const data = period==='week'
+    ? [450,820,320,960,1200,680,340]
+    : [4200,3800,5100,2900];
+  const max = Math.max(...data);
+  const todayIdx = period==='week' ? 6 : 3;
+
+  document.getElementById('chart-bars').innerHTML = data.map((v,i)=>`
+    <div class="bar-col">
+      <div class="bar-bar" style="height:${Math.round(v/max*110)+10}px;background:${i===todayIdx?'var(--saffron)':i===todayIdx-1?'var(--saffron-mid)':'var(--border)'}"></div>
+    </div>
+  `).join('');
+
+  document.getElementById('chart-labels').innerHTML = labels.map((l,i)=>`
+    <span style="font-size:10px;color:${i===todayIdx?'var(--saffron)':'var(--text3)'};flex:1;text-align:center">${l}</span>
+  `).join('');
+}
+
+function setPeriod(p, btn) {
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderChart(p);
+}
+
+// ── PROFILE / BUDGET ───────────────────────────────────
+function saveBudget() {
+  const val = parseInt(document.getElementById('budget-input').value)||0;
+  if (val<500) { showToast('⚠️ Budget must be at least ₹500'); return; }
+  state.budget = val;
+  document.getElementById('curr-budget-disp').textContent = '₹'+val.toLocaleString();
+  showToast('✅ Budget updated to ₹'+val.toLocaleString());
+}
+
+// ── TOAST ──────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ── INIT ───────────────────────────────────────────────
+renderHome();
+renderSeasonal();
+renderWish();
+renderChart('week');
+</script>
+</body>
+</html>
